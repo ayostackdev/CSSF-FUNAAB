@@ -222,8 +222,6 @@ const DonationAccountsManager: FC = () => {
                   />
                 </div>
                 <div>
-                  <label cla
-                <div>
                   <label className="text-sm font-medium text-gray-700">Sort Order</label>
                   <Input
                     type="number"

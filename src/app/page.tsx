@@ -85,7 +85,14 @@ export default async function Home() {
     .select("*")
     .order("created_at", { ascending: false });
 
+  const { data: anointedSounds } = await supabase
+    .from("anointed_sounds")
+    .select("*")
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+
   const serverSermons = (sermons || []) as SermonItem[];
+  const serverAnointedSounds = (anointedSounds || []) as Array<{ id: string; title: string; youtube_id: string }>;
   const serverGroups = (groups || []) as Array<{
     id: string;
     name: string;
@@ -151,7 +158,7 @@ export default async function Home() {
       <Loader />
       <UpcomingEvent serverEvents={bannersWithUrls} />
       <Groups serverGroups={serverGroups} />
-      <Sermon serverSermons={serverSermons} serverWorship={worshipWithUrls} />
+      <Sermon serverSermons={serverSermons} serverWorship={worshipWithUrls} serverAnointedSounds={serverAnointedSounds} />
       <Service />
       <Verse />
       <PledgeSection />

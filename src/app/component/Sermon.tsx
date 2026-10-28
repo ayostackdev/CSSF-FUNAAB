@@ -38,23 +38,23 @@ interface MediaItem {
 interface SermonsMediaProps {
   serverSermons?: SermonItem[];
   serverWorship?: WorshipItem[];
+  serverAnointedSounds?: Array<{ id: string; title: string; youtube_id: string }>;
 }
 
-const staticMedia: Record<string, MediaItem[]> = {
-  "Anointed Sounds": [
-    { type: "video", id: "f2oxGYpuLkw", title: "Praise" },
-    { type: "video", id: "lrdmnAn9gxk", title: "Worthy of My Praise" },
-  ],
-};
-
-export default function SermonsMedia({ serverSermons = [], serverWorship = [] }: SermonsMediaProps) {
+export default function SermonsMedia({ serverSermons = [], serverWorship = [], serverAnointedSounds = [] }: SermonsMediaProps) {
   const tabs = ["Anointed Sounds", "Sermons", "Gallery"];
   const [activeTab, setActiveTab] = useState("Anointed Sounds");
 
   const plugin = useRef(Autoplay({ delay: 4000, stopOnInteraction: true }));
 
+  const anointedSounds = serverAnointedSounds.map((s) => ({
+    type: "video" as const,
+    id: s.youtube_id,
+    title: s.title,
+  }));
+
   const mediaData: Record<string, MediaItem[]> = {
-    ...staticMedia,
+    "Anointed Sounds": anointedSounds,
     Sermons: serverSermons.map((s) => ({
       type: "drive_embed",
       link: s.drive_link,

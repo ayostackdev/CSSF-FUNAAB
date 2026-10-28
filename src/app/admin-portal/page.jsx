@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "../utils/supabase/client";
 import BannerAdmin from "../component/BannerAdmin";
-import AccountInfoSettings from "./components/AccountInfoSettings";
+import DonationAccountsManager from "./components/DonationAccountsManager";
 import ContactSettings from "./components/ContactSettings";
 import SermonManager from "./components/SermonManager";
 import WorshipManager from "./components/WorshipManager";
@@ -69,7 +69,7 @@ export default function AdminDashboardPage() {
         <div className="grid lg:grid-cols-2 gap-10 items-start">
           <div className="flex flex-col gap-8">
             <InboxManager />
-            <AccountInfoSettings />
+            <DonationAccountsManager />
             <ContactSettings />
             <SermonManager />
             <WorshipManager />

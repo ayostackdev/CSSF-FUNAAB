@@ -7,30 +7,42 @@ interface DonateCTAProps {
   onClose: () => void;
 }
 
+interface DonationAccount {
+  id: string;
+  purpose: string;
+  account_name: string;
+  account_number: string;
+  bank: string;
+  is_active: boolean;
+  sort_order: number;
+}
+
 const DonateCTA: FC<DonateCTAProps> = ({ onClose }) => {
   const [copiedAccount, setCopiedAccount] = useState<string | null>(null);
-  const [accountName, setAccountName] = useState("");
-  const [accountNumber, setAccountNumber] = useState("");
-  const [bank, setBank] = useState("");
+  const [accounts, setAccounts] = useState<DonationAccount[]>([]);
+  const [selectedId, setSelectedId] = useState<string>("");
 
   useEffect(() => {
-    const fetchAccountInfo = async () => {
+    const fetchAccounts = async () => {
       try {
-        const res = await fetch("/api/account-number/update");
+        const res = await fetch("/api/donation-accounts");
         const data = await res.json();
-        setAccountName(data.accountName || "");
-        setAccountNumber(data.accountNumber || "");
-        setBank(data.bank || "");
+        const list = data.accounts || [];
+        setAccounts(list);
+        if (list.length > 0) {
+          setSelectedId(list[0].id);
+        }
       } catch {
-        setAccountName("");
-        setAccountNumber("");
-        setBank("");
+        setAccounts([]);
       }
     };
-    fetchAccountInfo();
+    fetchAccounts();
   }, []);
 
+  const selected = accounts.find((a) => a.id === selectedId) || accounts[0];
+
   const copyToClipboard = async (accountNum: string) => {
+    if (!accountNum) return;
     try {
       await navigator.clipboard.writeText(accountNum);
       setCopiedAccount(accountNum);
@@ -58,28 +70,54 @@ const DonateCTA: FC<DonateCTAProps> = ({ onClose }) => {
         </button>
 
         <h2 className="text-3xl font-bold text-gray-700 mb-6">PARTNERSHIP</h2>
-        <p className="text-lg text-blue-950 mb-8">
+        <p className="text-lg text-blue-950 mb-6">
           Give, and it shall be given unto you; good measure, pressed down, and
           shaken together, and running over, shall men give into your bosom.
           (Luke 6:38)
         </p>
 
-        <div className="mb-6 flex justify-center items-center space-x-4">
-          <span className="text-lg font-semibold text-blue-950">
-            Account: <span className="font-bold">{accountNumber || "-"}</span> — {bank || ""} {accountName || ""}
-          </span>
-          <button
-            onClick={() => copyToClipboard(accountNumber)}
-            className="btn-cta px-8 py-3 mt-3"
-          >
-            {copiedAccount === accountNumber ? "Copied!" : "Copy"}
-          </button>
-        </div>
+        {accounts.length > 1 && (
+          <div className="mb-4">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Give Towards</label>
+            <select
+              value={selectedId}
+              onChange={(e) => setSelectedId(e.target.value)}
+              className="w-full max-w-xs mx-auto px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {accounts.map((acc) => (
+                <option key={acc.id} value={acc.id}>
+                  {acc.purpose}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {accounts.length === 0 ? (
+          <p className="text-gray-600 mb-6">Account details not available yet. Please try again later.</p>
+        ) : (
+          <>
+            {accounts.length === 1 && (
+              <p className="text-lg font-semibold text-blue-950 mb-2">{selected?.purpose}</p>
+            )}
+            <div className="mb-6 flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-4">
+              <span className="text-lg font-semibold text-blue-950">
+                Account: <span className="font-bold">{selected?.account_number || "-"}</span> — {selected?.bank || ""} {selected?.account_name || ""}
+              </span>
+              <button
+                onClick={() => copyToClipboard(selected?.account_number || "")}
+                className="btn-cta px-8 py-3"
+              >
+                {copiedAccount === selected?.account_number ? "Copied!" : "Copy"}
+              </button>
+            </div>
+          </>
+        )}
 
         <button
           onClick={() => {
-            if (accountNumber) {
-              copyToClipboard(accountNumber);
+            if (selected?.account_number) {
+              copyToClipboard(selected.account_number);
             } else {
               toast.info("Account details not available yet. Please try again later.");
             }

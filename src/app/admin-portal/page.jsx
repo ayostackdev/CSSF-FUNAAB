@@ -1,41 +1,61 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
-
 import { useState, useEffect } from "react";
 import { createClient } from "../utils/supabase/client";
+import dynamic from "next/dynamic";
+
 import BannerAdmin from "../component/BannerAdmin";
 import DonationAccountsManager from "./components/DonationAccountsManager";
 import AnointedSoundsManager from "./components/AnointedSoundsManager";
-import ContactSettings from "./components/ContactSettings";
-import SermonManager from "./components/SermonManager";
-import WorshipManager from "./components/WorshipManager";
-import MemoryVerseManager from "./components/MemoryVerseManager";
-import InboxManager from "./components/InboxManager";
-import GroupsManager from "./components/GroupsManager";
+
+const ContactSettings = dynamic(() => import("./components/ContactSettings"), { ssr: false });
+const SermonManager = dynamic(() => import("./components/SermonManager"), { ssr: false });
+const WorshipManager = dynamic(() => import("./components/WorshipManager"), { ssr: false });
+const MemoryVerseManager = dynamic(() => import("./components/MemoryVerseManager"), { ssr: false });
+const InboxManager = dynamic(() => import("./components/InboxManager"), { ssr: false });
+const GroupsManager = dynamic(() => import("./components/GroupsManager"), { ssr: false });
 
 export default function AdminDashboardPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [authResolved, setAuthResolved] = useState(false);
-  const supabase = createClient();
+  let supabase;
+  try {
+    supabase = createClient();
+  } catch {
+    supabase = null;
+  }
 
   useEffect(() => {
-    const checkAdminSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      setIsAdmin(Boolean(data?.session?.user));
+    if (!supabase) {
       setAuthResolved(true);
+      setIsAdmin(false);
+      return;
+    }
+    const checkAdminSession = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        setIsAdmin(Boolean(data?.session?.user));
+        setAuthResolved(true);
+      } catch (e) {
+        setAuthResolved(true);
+        setIsAdmin(false);
+      }
     };
 
     checkAdminSession();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAdmin(Boolean(session?.user));
-      setAuthResolved(true);
-    });
+    try {
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((_event, session) => {
+        setIsAdmin(Boolean(session?.user));
+        setAuthResolved(true);
+      });
 
-    return () => subscription.unsubscribe();
+      return () => subscription.unsubscribe();
+    } catch {
+      setAuthResolved(true);
+    }
   }, [supabase]);
 
   if (!authResolved) {

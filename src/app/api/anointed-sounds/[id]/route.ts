@@ -34,7 +34,7 @@ function extractYoutubeId(url: string): string | null {
   return match ? match[1] : null;
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const rateLimitError = getRateLimitErrorResponse(request, 'api:anointed-sounds-id', 20, 60_000);
     if (rateLimitError) return rateLimitError;
@@ -42,7 +42,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const authCheck = await requireAdmin(request);
     if (!authCheck.ok) return authCheck.response;
 
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     const updates: Record<string, any> = {};
 
@@ -79,7 +79,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const rateLimitError = getRateLimitErrorResponse(request, 'api:anointed-sounds-id', 20, 60_000);
     if (rateLimitError) return rateLimitError;
@@ -87,7 +87,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     const authCheck = await requireAdmin(request);
     if (!authCheck.ok) return authCheck.response;
 
-    const { id } = params;
+    const { id } = await params;
     const { supabaseUrl, serviceKey } = getSupabaseConfig();
     if (!supabaseUrl || !serviceKey) {
       return NextResponse.json({ success: false, error: 'Server misconfigured' }, { status: 500 });
